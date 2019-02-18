@@ -1,0 +1,335 @@
+;Trabalho_2
+;***************************"main"**********************************************
+.include <m128def.inc>
+.def d1=r5;define digito 1
+.def d2=r6;define digito 2
+.def d3=r7;define digito 3
+.def FlagT=r17;0»flag5ms/ 1»flag500ms / 2»flagativar500ms / 3»informa o proximo estado do pisca/4 »passou do temp premitido 
+.def mods=r18;diz em que modo esta o sistema
+.def count500ms=r19;define o contador que informa que o numero de vezes que passaram 5ms em 500ms
+.def count5ms=r20;define o contador que informa que o numero de vezes que passaram 1ms em 5ms
+.def disp=r21;numero do display
+.def s3=r22;contador de 3 segundos
+.def segu=r23
+.def count_seg=r24
+.def tempo=r25
+.cseg
+.org 0
+	jmp	main
+.org 0x02
+	jmp int_ext0
+.org 0x04
+	jmp int_ext1
+.org 0x1E
+	jmp int_tc0
+.org 0x46
+table:
+	.DB 0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90,0xff,0xff
+inic:
+;inicializar processador
+	ldi r16,0b11111111
+	out PortA,r16;apagar os leds
+	out DDRA,r16;Defenir o DDRA (leds) como saidas
+	out PortC,r16;apagar os displays
+	out DDRC,r16
+	ldi r16,0b11000000
+	out PortD,r16
+	out DDRD,r16
+;inicializar timer
+	ldi r16,62;atribui a ocr0 o valor de 62
+	out ocr0,r16
+	Ldi r16,0b00001110;tccr0 modo ctc,prescaler 256,oc0 off
+	out Tccr0,r16
+	in r16,TIMSK;enable da interropeçao oc0 
+	ori r16,0b00000010 
+	out TIMSK,r16
+;inicializar interropeçoes externas
+	Ldi r16,0b00001010;flaco descendente
+	sts eicra,r16
+	ldi r16,0b00000001;ativar int 0 pois o stop nao nos enteressa so quando a int0 for ativada é que usamos a int1
+	out eimsk,r16
+;inicializar variaveis
+	ldi r16,0xff
+	mov d1,r16
+	ldi r16,0xff
+	mov d2,r16
+	ldi r16,0xff
+	mov d3,r16
+	ldi flagT,0
+	ldi s3,6
+	ldi mods,0
+	ldi count500ms,0
+	ldi count5ms,0
+	ldi disp,0
+	sei
+	ret	
+main:
+	ldi r16,0xff;guarda o valor 0xff na variavel r16
+	out spl,r16;
+	ldi r16,0x10;guarda o valor 0x10 na variavel r16
+	out sph,r16;
+	call inic; chama a funçao inic
+;********************************************************************
+modo_select:
+	modo0:
+		cpi mods,0;ve se esta no modo0
+		brne modo1
+	modo1:
+		cpi mods,1;ve se esta no modo1
+		brne modo2
+		
+		sbrs flagT,0;se estiver vai ver se ja passaram 5 ms
+		jmp modo2
+		ldi r16,0
+		out porta,r16
+		mov r16,d1
+		inc r16; se passaram muda o numero do digito 
+		mov d1,r16
+		call testnum;ve se o numero exede 9
+		cbr flagT,0b00000001;limpa a flag de 5ms
+		
+	modo2:
+		cpi mods,2
+		brne modo3
+		sbrs flagT,0
+		jmp modo3
+		inc d2
+		call testnum
+		cbr flagT,0b00000001
+	modo3:
+		cpi mods,3
+		brne modo4
+		sbrs flagT,0
+		jmp modo4
+		inc d3
+		call testnum
+		cbr flagT,0b00000001
+		
+modo4:
+	cpi mods,4; ve se esta no modo 4 
+	brne overtime
+	cp d1,d2;ve se os 3 numeros sao iguais
+	brne errou
+	cp d2,d3
+	brne errou
+	ldi r16,0b00000000;se tiver acertado disliga as int externas 
+	out eimsk,r16
+	sbrs flagT,1;ve se passaram 500ms
+	jmp fim
+	cbr flagT,0b00000010
+	sbrc flagT,3;se passaram os 500ms ve se foram 500ms acesos ou apagados 0 acesos 1 apagados
+ 	jmp acender;
+	apagar:;se estava aceso vai apagar
+		sbr flagT,0b00001000;nutifica que agora esta apagado
+		dec s3; decrementa o contador de 3 segundo sao presisos 6 ciclos de 500ms para passar 6 seg
+		jmp fimmod4
+	acender:
+		cbr flagT,0b00001000
+		dec s3;para passarem 3 seg sao presisos 6 500ms
+	fimmod4:
+		cpi s3,0; ve se passaram 3 segundos
+		brne fim
+	errou:;se errou ou passaram os 3 seg vai para o modo 0
+		ldi mods,0
+		ldi r16,0b00000001
+		out eimsk,r16
+overtime:
+	sbrs flagT,4; ve se passou o tempo
+	jmp fim
+	inc mods
+	cbr flagT,0b00010000
+	call cleartime
+led_1:
+	cpi mods,2;ve em que modo esta 
+	brne led_2;se nao tiver no modo passa para o seguinte
+	ldi r16,0b11111110;liga o led
+	mov tempo,count_seg
+	lsr tempo
+	cpi tempo,0
+	brne mostrar_leds
+	ldi tempo,1
+	jmp mostrar_leds
+led_2:
+	cpi mods,3;ve em que modo esta 
+	brne led_3;se nao tiver no modo passa para o seguinte
+	ldi r16,0b11111100;liga o led
+	mov tempo,count_seg
+	lsr tempo
+	cpi tempo,0
+	brne mostrar_leds
+	ldi tempo,1
+	jmp mostrar_leds
+led_3:
+	cpi mods,4;ve em que modo esta 
+	brne mostrar_leds;se nao tiver no modo passa para o seguinte
+	ldi r16,0b11111000;liga o led
+	ldi mods,0
+mostrar_leds:
+	ldi count_seg,0
+	out portA,r16
+fim:
+	call setdisplay
+	jmp modo_select
+;********************
+cleartime:
+	ldi count5ms,0
+	ldi count500ms,0
+	ret
+testnum:
+push r16;guarda o valor de r16 na stack
+in r16,sreg
+push r16;guarda o valor do vetor de registos
+	modo_1T:
+		cpi mods,1
+		brne modo_2T
+		mov r16,d1
+		cpi r16,10
+		brne fimtest 
+		ldi r16,0
+		mov d1,r16
+	modo_2T:
+		cpi mods,2
+		brne modo_3T
+		mov r16,d2
+		cpi r16,10
+		brne fimtest 
+		ldi r16,0
+		mov d2,r16
+	modo_3T:
+		cpi mods,3
+		brne fimtest
+		mov r16,d3
+		cpi r16,10
+		brne fimtest		
+		ldi r16,0
+		mov d3,r16
+	fimtest:
+		pop r16
+		out sreg,r16
+		pop r16
+		ret
+int_ext0:;
+	push r16;guarda o valor de r16 na stack
+	in r16,sreg
+	push r16;guarda o valor do vetor de registos
+	in r16,eimsk;premite que apenas a segunda int seja possivel
+	sbr r16,0b00000010
+	cbr r16,0b00000001
+	out eimsk,r16
+	ser r16;limpa a flag de interropeçao pondo tudo a um
+	out eifr,r16
+	
+	ldi count_seg,0;carrega o contador de segundos com zero
+	ldi mods,1; passa para o modo 1 
+	ldi tempo,255; define tempo maximo com 255
+	call cleartime; limpa o tempo
+	ldi r16,0
+	mov d1,r16; define o d1 com o digito 0
+	ldi r16,10
+	mov d2,r16; define o d2 como a pagado o mesmo para d3
+	mov d3,r16
+	
+	pop r16
+	out sreg,r16
+	pop r16
+	reti
+	
+int_ext1:;
+	push r16;guarda o valor de r16 na stack
+	in r16,sreg
+	push r16;guarda o valor do vetor de registos
+	ser r16;limpa a flag de interropeçao pondo tudo a um
+	out eifr,r16
+	
+	ldi mods,2
+	mov tempo,count_seg
+	lsr tempo
+	ldi r16,0b11111110
+	out porta,r16
+	ldi count_seg,0
+	
+	pop r16
+	out sreg,r16
+	pop r16
+	reti	
+		
+int_tc0:
+	push r16
+	in r16,sreg
+	push r16
+;ciclo 5 ms
+	inc count5ms;passou um ms
+	cpi count5ms,5; ve se é a 5 vez que passou um ms
+	brne fimint_tc0;se nao passou vai para o fim da int
+	ldi count5ms,0;se passou da clean no contador
+	sbr flagT,0b00000001;sinaliza na flag de 5ms
+	inc	count500ms ; e incrementa o contador de 5 ms
+	cpi count500ms,100;se se passaram 500ms 
+	brne fimint_tc0 ; se nao fim da int
+	ldi count500ms,0; se sim clean no contador 
+	sbr flagT,0b00000010; e sinaliza na flag de 500ms
+	inc segu;incrementa que passaram 500ms 
+	cpi segu,2; sao presisos 2*500ms para dar um segundo como presisamos de 255 s temos de fazer esta simplificaçao
+	brne fimint_tc0;;se  nao passou 1 seg fim da int
+	ldi segu,0; se passou da clean no contador 
+	inc count_seg; e incrementa o contador de 1 seg
+	cp count_seg,tempo; ve se passou o tempo
+	brne fimint_tc0;se nao passou fim da int
+	sbr flagT,0b00010000; se passou sinalisa na flag overtime
+fimint_tc0:
+	pop r16
+	out sreg,r16
+	pop r16
+	reti
+	
+setdisplay:
+push r20
+push r16;guarda o valor de r16 na stack
+in r16,sreg
+push r16;guarda o valor do vetor de registos
+	ldi r16,0b00001000
+	and r16,flagT
+	cpi r16,0b00001000
+	breq blinkmod
+	LDI ZH,high(table<<1)
+	LDI Zl,low(table<<1)
+	lpm r20,Z	
+	display_0:
+		cpi disp,0
+		brne display_1
+		ldi r16,0b11000000
+		out portD,r16
+		ADD Zl,d1
+		lpm r20,Z
+		out portC,r20
+	display_1:
+		cpi disp,1
+		brne display_2
+		ldi r16,0b10000000
+		out portD,r16
+		ADD Zl,d2
+		lpm r20,Z
+		out portC,r20
+	display_2:
+		cpi disp,2
+		brne fimsetdisp
+		ldi r16,0b01000000
+		out portD,r16
+		ADD Zl,d3
+		lpm r20,Z
+		out portC,r20
+	fimsetdisp:
+		
+		inc disp
+		cpi disp,3
+		brne fimret
+		ldi disp,0
+	blinkmod:
+		LDI r20,0xff
+	fimret:
+
+		pop r16
+		out sreg,r16
+		pop r16
+		pop r20
+		ret
