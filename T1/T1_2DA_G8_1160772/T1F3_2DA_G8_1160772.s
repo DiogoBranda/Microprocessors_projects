@@ -5,10 +5,10 @@
 .def FlagS = r25
 
 .cseg; inicio do programa
-.org 0 ; que começa nesta linha
+.org 0 ; que comeÃ§a nesta linha
 	jmp main;salta para o processo main
-.cseg ;vai fazer com que seja deixada memoria livre de 0x0 até 
-.org 0x46; a posição 0x46
+.cseg ;vai fazer com que seja deixada memoria livre de 0x0 atÃ© 
+.org 0x46; a posiÃ§Ã£o 0x46
 table:
 	.DB 0x90,0x80,0xF8,0x82,0x92,0x99,0xB0,0xA4,0xF9,0xC0
 ;iniciar processador
@@ -102,7 +102,7 @@ main:
 	out spl,r16;
 	ldi r16,0x10;guarda o valor 0x10 na variavel r16
 	out sph,r16;
-	call inic; chama a funçao inic
+	call inic; chama a funÃ§ao inic
 	LDI ZH,high(table<<1)
 	LDI Zl,low(table<<1)
 	Lpm lugares,Z
