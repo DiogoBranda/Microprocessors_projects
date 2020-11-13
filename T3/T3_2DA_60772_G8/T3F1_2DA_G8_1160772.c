@@ -10,7 +10,7 @@ volatile unsigned char cont_disp ,digito[4]={10,10,10,0},pwm,sentido=1,sw,cont;
 
 void display(void){
     PORTA=cont_disp<<6;                                                                        //shift para os dois digitos mais significativoso do PORTA
-    PORTC=tabela[digito[cont_disp]];                                                           //coloca no display correspondente ao valor do contador no momento, o valor que é indicado na função processar display
+    PORTC=tabela[digito[cont_disp]];                                                           //coloca no display correspondente ao valor do contador no momento, o valor que Ã© indicado na funÃ§Ã£o processar display
     cont_disp++;                                                                               //incrementa o contador do display
     if (cont_disp==4)                                                                          //Quando o contador for 4 o contador regressa a 0
     cont_disp=0;                                                                           // contador do display a 0
