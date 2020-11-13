@@ -23,7 +23,7 @@ recolha:	sbi		ADCSRA,6
 conversao:
 		in		r21,ADCSRA		
 		andi	r21,0x40		
-		brne	conversao   	;Quando a convers„o terminar sai deste ciclo
+		brne	conversao   	;Quando a convers√£o terminar sai deste ciclo
 
 		in		r21,ADCL		
 		add		r22,r21
@@ -32,7 +32,7 @@ conversao:
 
 		dec		r20				;Decrementa o contador de amostras
 		
-		brne		recolha			;Enquanto n„o forem obtidas as recolhas pretendidas, fica preso no ciclo recolha
+		brne		recolha			;Enquanto n√£o forem obtidas as recolhas pretendidas, fica preso no ciclo recolha
 
 		ldi		r20,2			;Calcula a media
 loop1:		lsr		r23				
