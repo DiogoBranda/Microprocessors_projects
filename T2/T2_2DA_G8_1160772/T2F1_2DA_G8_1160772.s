@@ -32,7 +32,7 @@ inic:
 	out ocr0,r16
 	Ldi r16,0b00001110;tccr0 modo ctc,prescaler 256,oc0 off
 	out Tccr0,r16
-	in r16,TIMSK;enable da interropeçao oc0 
+	in r16,TIMSK;enable da interropeÃ§ao oc0 
 	ori r16,0b00000010 
 	out TIMSK,r16
 
@@ -52,16 +52,16 @@ main:
 	out spl,r16;
 	ldi r16,0x10;guarda o valor 0x10 na variavel r16
 	out sph,r16;
-	call inic; chama a funçao inic
+	call inic; chama a funÃ§ao inic
 ;********************fim "main"****************************
 ;**************ciclo principal*******************************
 ciclo:;enquanto a flag de t for igual a 0 ele nao saira deste ciclo, a flag de t so passa a um 
 	sbic pinD,0
-	JMP ciclo;quando a int0 é ativada ouseja quando o botao de start é premido
+	JMP ciclo;quando a int0 Ã© ativada ouseja quando o botao de start Ã© premido
 roleta:;se foi premido entao vai entrar na "roleta" 
 	mov numeroreal,numero
-	call display;vai chamar a funçao para mostrar os numeros no display
-	cpi numero,9;se o numero for igual a nove temos de dar reset ao numero para começar do zero
+	call display;vai chamar a funÃ§ao para mostrar os numeros no display
+	cpi numero,9;se o numero for igual a nove temos de dar reset ao numero para comeÃ§ar do zero
 	breq resetnumero;se o numero for igual a nove vai para o reset do numero
 	inc numero;senao for igual a zero vai encrementar o numero
 	ldi r16,0;para esperar 5 ms temos de por o timer a zero 
@@ -100,7 +100,7 @@ numeroselec:;e entao temos de mostrar o numero selcionado
 	ldi ativar500ms,0
 	jmp ciclo;e espera que alguem carregue novamente no start
 ;***********************fim ciclo principal*******************************
-;*************************funçoes ***************************************
+;*************************funÃ§oes ***************************************
 resetnumero:
 	ldi numero,0
 	ldi r16,0
@@ -129,7 +129,7 @@ int_tc0:;int do timer
 ;ciclo500ms
 	cpi ativar500ms,1;ve se a se pretende contar 500ms
 	brne fimint;se nao se pretender salta para o fim 
-	inc	count500ms ;se se pretender começa a encrementar o contador de 500ms
+	inc	count500ms ;se se pretender comeÃ§a a encrementar o contador de 500ms
 	cpi count500ms,100;compara se se passaram 100 ciclos
 	brne fimint ;se nao se passaram salta para o fim
 	ldi f500ms,1;se se passaram sinaliza que passaram 500ms
@@ -140,4 +140,4 @@ fimint:
 	pop r16
 	reti
 	
-;************************Fim funçoes***********************************
+;************************Fim funÃ§oes***********************************
