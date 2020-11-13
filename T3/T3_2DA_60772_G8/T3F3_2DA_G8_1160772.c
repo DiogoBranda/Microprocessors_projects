@@ -18,7 +18,7 @@ volatile USARTRX rxUSART={0,0,0,0};
 char transmit_buffer[10];
 void display(void){
 	PORTA=cont_disp<<6;                                                                        //shift para os dois digitos mais significativoso do PORTA
-	PORTC=tabela[digito[cont_disp]];                                                           //coloca no display correspondente ao valor do contador no momento, o valor que é indicado na função processar display
+	PORTC=tabela[digito[cont_disp]];                                                           //coloca no display correspondente ao valor do contador no momento, o valor que Ã© indicado na funÃ§Ã£o processar display
 	cont_disp++;                                                                               //incrementa o contador do display
 	if (cont_disp==4)                                                                          //Quando o contador for 4 o contador regressa a 0
 	cont_disp=0;                                                                           // contador do display a 0
